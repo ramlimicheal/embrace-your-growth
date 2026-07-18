@@ -17,7 +17,7 @@ import portraitHoverAsset from "@/assets/ramli-portrait-hover.png.asset.json";
 
 
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/logic")({
   component: Index,
 });
 
