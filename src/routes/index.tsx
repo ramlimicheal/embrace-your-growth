@@ -1,6 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { ClientOnly } from "@tanstack/react-router";
+import { lazy, Suspense, useState } from "react";
 import { motion } from "framer-motion";
+
+const BrainScene = lazy(() => import("@/components/BrainScene"));
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -87,21 +91,32 @@ function BrainLanding() {
   const [hover, setHover] = useState<"creative" | "logic" | null>(null);
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-background text-foreground">
+    <div className="relative min-h-screen w-full overflow-hidden bg-black text-white">
+      {/* WebGL plasma background */}
+      <div className="absolute inset-0 z-0">
+        <ClientOnly fallback={<div className="h-full w-full bg-gradient-to-r from-orange-950/40 via-black to-blue-950/40" />}>
+          <Suspense fallback={null}>
+            <BrainScene hoverSide={hover} />
+          </Suspense>
+        </ClientOnly>
+      </div>
+
+      {/* subtle dot grid over the shader */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.05]"
+        className="pointer-events-none absolute inset-0 z-10 opacity-[0.07] mix-blend-overlay"
         style={{
           backgroundImage:
-            "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
+            "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
           backgroundSize: "4px 4px",
         }}
       />
 
-      <header className="relative z-20 flex items-center justify-between px-6 py-5 text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
+      <header className="relative z-20 flex items-center justify-between px-6 py-5 text-[11px] uppercase tracking-[0.28em] text-white/60">
         <span>Ramli T. Michael</span>
         <span className="hidden sm:inline">Portfolio · 2026</span>
       </header>
+
 
       <div className="relative z-20 mx-auto flex max-w-[1200px] items-center justify-between px-8 pt-2 text-[10px] uppercase tracking-[0.4em]">
         <div className={`transition-colors ${hover === "creative" ? "text-foreground" : "text-muted-foreground"}`}>
