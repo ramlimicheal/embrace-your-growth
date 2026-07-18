@@ -10,5 +10,5 @@ export default function BrainCanvas({
   width?: number;
   height?: number;
 }) {
-  return <Brain width={width} height={height} />;
+  return <Brain style={{ width, height }} />;
 }
