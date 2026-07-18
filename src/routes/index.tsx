@@ -1,6 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { ClientOnly } from "@tanstack/react-router";
+import { lazy, Suspense, useState } from "react";
 import { motion } from "framer-motion";
+
+// Browser-only: three.js + gsap. Never import statically.
+const BrainCanvas = lazy(() => import("@/components/BrainCanvas"));
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -18,79 +22,11 @@ export const Route = createFileRoute("/")({
   component: BrainLanding,
 });
 
-const CREATIVE = "paint · motion · music · colour · story · image · sound · feel · brush · score · frame · grain · poem · loop · muse · sketch · shoot · cut · mix · compose · dream · verse · canvas · ink · myth · light · shadow · rhythm · echo ·  ";
-const LOGIC = "const · function · system · ship · iterate · prompt · agent · type · reason · debug · spec · graph · async · hook · state · model · logic · trace · infer · diff · commit · test · map · reduce · build · deploy · cache · route · stack · signal ·  ";
-
-// Concentric arcs forming a hemisphere. cx is the inner edge (brain stem).
-// side "L" arcs sweep the left half; "R" arcs sweep the right half.
-type ArcConfig = { r: number; size: number; opacity: number };
-const ARCS: ArcConfig[] = [
-  { r: 60,  size: 11, opacity: 0.35 },
-  { r: 110, size: 13, opacity: 0.5  },
-  { r: 165, size: 15, opacity: 0.65 },
-  { r: 220, size: 17, opacity: 0.78 },
-  { r: 275, size: 18, opacity: 0.9  },
-  { r: 330, size: 16, opacity: 0.75 },
-  { r: 380, size: 14, opacity: 0.55 },
-];
-
-function Hemisphere({
-  side,
-  hovered,
-  fontFamily,
-  fontStyle = "normal",
-  words,
-}: {
-  side: "L" | "R";
-  hovered: boolean;
-  fontFamily: string;
-  fontStyle?: string;
-  words: string;
-}) {
-  // cx = inner edge of hemisphere (center of the brain, x=600)
-  const cx = 600;
-  const cy = 400;
-  // For left side, arcs go from top of stem, out and around, to bottom of stem (counterclockwise).
-  // For right side, mirrored (clockwise).
-  const sweep = side === "L" ? 0 : 1;
+function BrainSkeleton() {
   return (
-    <g
-      style={{
-        transition: "opacity 500ms ease, filter 500ms ease",
-        opacity: hovered ? 1 : 0.85,
-        filter: hovered ? "none" : "saturate(0.9)",
-      }}
-    >
-      {ARCS.map((a, i) => {
-        // Arc path: from (cx, cy - r) around to (cx, cy + r) via the outer side.
-        const startX = cx;
-        const startY = cy - a.r;
-        const endX = cx;
-        const endY = cy + a.r;
-        const d = `M ${startX} ${startY} A ${a.r} ${a.r} 0 0 ${sweep} ${endX} ${endY}`;
-        const id = `arc-${side}-${i}`;
-        return (
-          <g key={id}>
-            <path id={id} d={d} fill="none" stroke="none" />
-            <text
-              fill="currentColor"
-              fontFamily={fontFamily}
-              fontStyle={fontStyle}
-              fontSize={a.size}
-              letterSpacing={hovered ? "0.08em" : "0.04em"}
-              style={{
-                transition: "letter-spacing 500ms ease, opacity 500ms ease",
-                opacity: hovered ? Math.min(1, a.opacity + 0.15) : a.opacity,
-              }}
-            >
-              <textPath href={`#${id}`} startOffset="0">
-                {words.repeat(6)}
-              </textPath>
-            </text>
-          </g>
-        );
-      })}
-    </g>
+    <div className="grid h-[560px] w-full place-items-center">
+      <div className="h-64 w-64 animate-pulse rounded-full border border-foreground/10" />
+    </div>
   );
 }
 
@@ -99,128 +35,100 @@ function BrainLanding() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-background text-foreground">
-      {/* subtle dot grid */}
+      {/* subtle grid */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-[0.05]"
         style={{
-          backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
+          backgroundImage:
+            "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
           backgroundSize: "4px 4px",
         }}
       />
 
-      {/* Top bar */}
+      {/* Header */}
       <header className="relative z-20 flex items-center justify-between px-6 py-5 text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
         <span>Ramli T. Michael</span>
         <span className="hidden sm:inline">Portfolio · 2026</span>
       </header>
 
       {/* Hemisphere labels */}
-      <div className="relative z-20 mx-auto flex max-w-[1200px] items-center justify-between px-8 pt-2 text-[10px] uppercase tracking-[0.4em]">
-        <div className={`transition-colors ${hover === "creative" ? "text-foreground" : "text-muted-foreground"}`}>
-          <span className="font-serif italic">Left · Creative</span>
-          <div className="mt-1 font-serif text-[10px] italic text-muted-foreground/70 normal-case tracking-normal">
+      <div className="relative z-20 mx-auto flex max-w-[1200px] items-start justify-between px-8 pt-2">
+        <div
+          className={`transition-colors ${
+            hover === "creative" ? "text-foreground" : "text-muted-foreground"
+          }`}
+        >
+          <div className="text-[10px] uppercase tracking-[0.4em]">
+            <span className="font-serif italic">Left · Creative</span>
+          </div>
+          <div className="mt-1 font-serif text-xs italic text-muted-foreground/80">
             graphic · motion · music · image
           </div>
         </div>
-        <div className={`text-right transition-colors ${hover === "logic" ? "text-foreground" : "text-muted-foreground"}`}>
-          <span className="font-mono">Right · Logic</span>
-          <div className="mt-1 font-mono text-[10px] text-muted-foreground/70 normal-case tracking-normal">
+        <div
+          className={`text-right transition-colors ${
+            hover === "logic" ? "text-foreground" : "text-muted-foreground"
+          }`}
+        >
+          <div className="text-[10px] uppercase tracking-[0.4em]">
+            <span className="font-mono">Right · Logic</span>
+          </div>
+          <div className="mt-1 font-mono text-xs text-muted-foreground/80">
             ai · systems · vibe coding
           </div>
         </div>
       </div>
 
-      {/* Brain stage */}
+      {/* Stage */}
       <main className="relative mx-auto flex items-center justify-center px-4">
         <div className="relative w-full max-w-[1200px]">
-          <svg
-            viewBox="0 0 1200 800"
-            className="w-full text-foreground"
-            role="img"
-            aria-label="Typographic brain — choose a hemisphere"
-          >
-            {/* LEFT hemisphere — clickable */}
-            <Link
-              to="/creative"
-              onMouseEnter={() => setHover("creative")}
-              onMouseLeave={() => setHover(null)}
-              aria-label="Enter the creative side"
-            >
-              <rect x="0" y="0" width="600" height="800" fill="transparent" style={{ cursor: "pointer" }} />
-              <Hemisphere
-                side="L"
-                hovered={hover === "creative"}
-                fontFamily="ui-serif, Georgia, 'Times New Roman', serif"
-                fontStyle="italic"
-                words={CREATIVE}
-              />
-            </Link>
+          {/* 3D brain */}
+          <div className="relative flex items-center justify-center [&_canvas]:!bg-transparent">
+            <ClientOnly fallback={<BrainSkeleton />}>
+              <Suspense fallback={<BrainSkeleton />}>
+                <BrainCanvas width={1000} height={640} />
+              </Suspense>
+            </ClientOnly>
+          </div>
 
-            {/* RIGHT hemisphere — clickable */}
-            <Link
-              to="/logic"
-              onMouseEnter={() => setHover("logic")}
-              onMouseLeave={() => setHover(null)}
-              aria-label="Enter the logic side"
-            >
-              <rect x="600" y="0" width="600" height="800" fill="transparent" style={{ cursor: "pointer" }} />
-              <Hemisphere
-                side="R"
-                hovered={hover === "logic"}
-                fontFamily="ui-monospace, 'JetBrains Mono', Menlo, monospace"
-                words={LOGIC}
-              />
-            </Link>
+          {/* Hemisphere hit-zones */}
+          <Link
+            to="/creative"
+            onMouseEnter={() => setHover("creative")}
+            onMouseLeave={() => setHover(null)}
+            aria-label="Enter the creative side"
+            className="absolute inset-y-0 left-0 z-10 w-1/2 cursor-pointer"
+          />
+          <Link
+            to="/logic"
+            onMouseEnter={() => setHover("logic")}
+            onMouseLeave={() => setHover(null)}
+            aria-label="Enter the logic side"
+            className="absolute inset-y-0 right-0 z-10 w-1/2 cursor-pointer"
+          />
 
-            {/* central sulcus */}
-            <line
-              x1="600"
-              y1="40"
-              x2="600"
-              y2="760"
-              stroke="currentColor"
-              strokeOpacity="0.25"
-              strokeDasharray="2 6"
-            />
-            {/* brain stem */}
-            <path
-              d="M 578 760 Q 600 800 622 760"
-              fill="none"
-              stroke="currentColor"
-              strokeOpacity="0.35"
-              strokeWidth="1.2"
-            />
+          {/* central divider */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-1/2 top-6 bottom-6 z-[1] w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-foreground/15 to-transparent"
+          />
 
-            {/* center label */}
-            <g pointerEvents="none">
-              <text
-                x="600"
-                y="392"
-                textAnchor="middle"
-                fill="currentColor"
-                fillOpacity="0.55"
-                fontFamily="ui-monospace, monospace"
-                fontSize="10"
-                letterSpacing="6"
-              >
-                CHOOSE A HEMISPHERE
-              </text>
-            </g>
-          </svg>
-
-          {/* Center headline overlay (HTML for crisp fonts) */}
+          {/* Center prompt */}
           <motion.div
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.15 }}
-            className="pointer-events-none absolute inset-0 flex items-center justify-center"
+            className="pointer-events-none absolute inset-x-0 top-4 z-20 text-center"
           >
-            <h1 className="text-center">
-              <span className="block font-serif text-4xl italic text-foreground sm:text-6xl">
+            <p className="text-[10px] uppercase tracking-[0.4em] text-muted-foreground">
+              Choose a hemisphere
+            </p>
+            <h1 className="mt-3">
+              <span className="block font-serif text-3xl italic sm:text-5xl">
                 two minds,
               </span>
-              <span className="mt-1 block font-mono text-2xl text-foreground sm:text-4xl">
+              <span className="mt-1 block font-mono text-xl sm:text-3xl">
                 one_maker
               </span>
             </h1>
@@ -228,18 +136,30 @@ function BrainLanding() {
 
           {/* Hover CTAs */}
           <div
-            className={`pointer-events-none absolute left-8 bottom-10 transition-all duration-500 ${
-              hover === "creative" ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"
+            className={`pointer-events-none absolute left-8 bottom-8 z-20 transition-all duration-500 ${
+              hover === "creative"
+                ? "opacity-100 translate-x-0"
+                : "opacity-0 -translate-x-2"
             }`}
           >
-            <div className="font-serif text-2xl italic sm:text-3xl">enter the creative →</div>
+            <div className="font-serif text-xs uppercase tracking-[0.32em] text-foreground/60">
+              Left brain
+            </div>
+            <div className="mt-1 font-serif text-2xl italic sm:text-3xl">
+              enter the creative →
+            </div>
           </div>
           <div
-            className={`pointer-events-none absolute right-8 bottom-10 text-right transition-all duration-500 ${
-              hover === "logic" ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2"
+            className={`pointer-events-none absolute right-8 bottom-8 z-20 text-right transition-all duration-500 ${
+              hover === "logic"
+                ? "opacity-100 translate-x-0"
+                : "opacity-0 translate-x-2"
             }`}
           >
-            <div className="font-mono text-2xl sm:text-3xl">← ./logic</div>
+            <div className="font-mono text-xs uppercase tracking-[0.32em] text-foreground/60">
+              Right brain
+            </div>
+            <div className="mt-1 font-mono text-2xl sm:text-3xl">← ./logic</div>
           </div>
         </div>
       </main>
