@@ -12,92 +12,85 @@ export const Route = createFileRoute("/")({
           "A dual portfolio: the logical side that ships systems, and the creative side that paints, films, and sounds. Choose a hemisphere.",
       },
       { property: "og:title", content: "Ramli T. Michael — Two minds, one maker" },
-      {
-        property: "og:description",
-        content: "Pick a hemisphere: logic or creative.",
-      },
+      { property: "og:description", content: "Pick a hemisphere: logic or creative." },
     ],
   }),
   component: BrainLanding,
 });
 
-// Words that COMPOSE each hemisphere. Density + varied sizes = the brain shape.
-const CREATIVE_WORDS = [
-  "paint", "motion", "music", "colour", "story", "image", "sound", "feel",
-  "brush", "score", "frame", "grain", "poem", "loop", "hue", "muse",
-  "sketch", "shoot", "cut", "mix", "compose", "dream", "verse", "stain",
-  "shape", "light", "shadow", "rhythm", "echo", "canvas", "ink", "myth",
+const CREATIVE = "paint · motion · music · colour · story · image · sound · feel · brush · score · frame · grain · poem · loop · muse · sketch · shoot · cut · mix · compose · dream · verse · canvas · ink · myth · light · shadow · rhythm · echo ·  ";
+const LOGIC = "const · function · system · ship · iterate · prompt · agent · type · reason · debug · spec · graph · async · hook · state · model · logic · trace · infer · diff · commit · test · map · reduce · build · deploy · cache · route · stack · signal ·  ";
+
+// Concentric arcs forming a hemisphere. cx is the inner edge (brain stem).
+// side "L" arcs sweep the left half; "R" arcs sweep the right half.
+type ArcConfig = { r: number; size: number; opacity: number };
+const ARCS: ArcConfig[] = [
+  { r: 60,  size: 11, opacity: 0.35 },
+  { r: 110, size: 13, opacity: 0.5  },
+  { r: 165, size: 15, opacity: 0.65 },
+  { r: 220, size: 17, opacity: 0.78 },
+  { r: 275, size: 18, opacity: 0.9  },
+  { r: 330, size: 16, opacity: 0.75 },
+  { r: 380, size: 14, opacity: 0.55 },
 ];
 
-const LOGIC_WORDS = [
-  "const", "function", "system", "ship", "iterate", "prompt", "agent", "type",
-  "reason", "debug", "spec", "graph", "async", "hook", "state", "model",
-  "logic", "trace", "infer", "diff", "commit", "test", "map", "reduce",
-  "build", "deploy", "cache", "route", "stack", "signal", "vector", "token",
-];
-
-// Deterministic pseudo-random for consistent layout across renders
-function seeded(i: number) {
-  const x = Math.sin(i * 9973.13) * 10000;
-  return x - Math.floor(x);
-}
-
-type HemisphereProps = {
-  side: "left" | "right";
-  words: string[];
+function Hemisphere({
+  side,
+  hovered,
+  fontFamily,
+  fontStyle = "normal",
+  words,
+}: {
+  side: "L" | "R";
   hovered: boolean;
-  fontClass: string;
-};
-
-function Hemisphere({ side, words, hovered, fontClass }: HemisphereProps) {
-  // Hemisphere as an ellipse mask; words positioned inside via absolute coords
+  fontFamily: string;
+  fontStyle?: string;
+  words: string;
+}) {
+  // cx = inner edge of hemisphere (center of the brain, x=600)
+  const cx = 600;
+  const cy = 400;
+  // For left side, arcs go from top of stem, out and around, to bottom of stem (counterclockwise).
+  // For right side, mirrored (clockwise).
+  const sweep = side === "L" ? 0 : 1;
   return (
-    <div
-      className={`absolute inset-y-0 ${side === "left" ? "left-0" : "right-0"} w-1/2 overflow-hidden`}
+    <g
       style={{
-        WebkitMaskImage:
-          side === "left"
-            ? "radial-gradient(ellipse 90% 78% at 100% 50%, black 62%, transparent 66%)"
-            : "radial-gradient(ellipse 90% 78% at 0% 50%, black 62%, transparent 66%)",
-        maskImage:
-          side === "left"
-            ? "radial-gradient(ellipse 90% 78% at 100% 50%, black 62%, transparent 66%)"
-            : "radial-gradient(ellipse 90% 78% at 0% 50%, black 62%, transparent 66%)",
+        transition: "opacity 500ms ease, filter 500ms ease",
+        opacity: hovered ? 1 : 0.85,
+        filter: hovered ? "none" : "saturate(0.9)",
       }}
     >
-      {words.map((w, i) => {
-        const r1 = seeded(i + (side === "left" ? 0 : 500));
-        const r2 = seeded(i * 3 + (side === "left" ? 7 : 91));
-        const r3 = seeded(i * 5 + 13);
-        // Anchor toward the inner edge (center of brain)
-        const top = 6 + r1 * 88; // %
-        const inner = 2 + r2 * 55; // % from inner edge
-        const size = 0.7 + r3 * 2.4; // rem
-        const rot = (r3 - 0.5) * 24; // deg
-        const opacity = 0.35 + r1 * 0.65;
-        const style: React.CSSProperties = {
-          top: `${top}%`,
-          fontSize: `${size}rem`,
-          transform: `translateY(-50%) rotate(${rot}deg)`,
-          opacity: hovered ? Math.min(1, opacity + 0.25) : opacity,
-          transition: "opacity 500ms ease, color 500ms ease, letter-spacing 500ms ease",
-          letterSpacing: hovered ? "0.02em" : "0",
-        };
-        if (side === "left") style.right = `${inner}%`;
-        else style.left = `${inner}%`;
+      {ARCS.map((a, i) => {
+        // Arc path: from (cx, cy - r) around to (cx, cy + r) via the outer side.
+        const startX = cx;
+        const startY = cy - a.r;
+        const endX = cx;
+        const endY = cy + a.r;
+        const d = `M ${startX} ${startY} A ${a.r} ${a.r} 0 0 ${sweep} ${endX} ${endY}`;
+        const id = `arc-${side}-${i}`;
         return (
-          <span
-            key={`${side}-${i}`}
-            className={`pointer-events-none absolute select-none whitespace-nowrap ${fontClass} ${
-              hovered ? "text-foreground" : "text-foreground/70"
-            }`}
-            style={style}
-          >
-            {w}
-          </span>
+          <g key={id}>
+            <path id={id} d={d} fill="none" stroke="none" />
+            <text
+              fill="currentColor"
+              fontFamily={fontFamily}
+              fontStyle={fontStyle}
+              fontSize={a.size}
+              letterSpacing={hovered ? "0.08em" : "0.04em"}
+              style={{
+                transition: "letter-spacing 500ms ease, opacity 500ms ease",
+                opacity: hovered ? Math.min(1, a.opacity + 0.15) : a.opacity,
+              }}
+            >
+              <textPath href={`#${id}`} startOffset="0">
+                {words.repeat(6)}
+              </textPath>
+            </text>
+          </g>
         );
       })}
-    </div>
+    </g>
   );
 }
 
@@ -106,13 +99,12 @@ function BrainLanding() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-background text-foreground">
-      {/* Grain / vignette */}
+      {/* subtle dot grid */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.06]"
+        className="pointer-events-none absolute inset-0 opacity-[0.05]"
         style={{
-          backgroundImage:
-            "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
+          backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
           backgroundSize: "4px 4px",
         }}
       />
@@ -123,106 +115,136 @@ function BrainLanding() {
         <span className="hidden sm:inline">Portfolio · 2026</span>
       </header>
 
-      {/* Brain stage */}
-      <main className="relative mx-auto flex min-h-[calc(100vh-8rem)] max-w-[1400px] items-center justify-center px-4">
-        <div className="relative aspect-[16/10] w-full max-w-[1200px]">
-          {/* Two hemispheres */}
-          <Link
-            to="/creative"
-            onMouseEnter={() => setHover("creative")}
-            onMouseLeave={() => setHover(null)}
-            aria-label="Enter the creative side"
-            className="group absolute inset-y-0 left-0 z-10 w-1/2 cursor-pointer"
-          >
-            <Hemisphere
-              side="left"
-              words={CREATIVE_WORDS}
-              hovered={hover === "creative"}
-              fontClass="font-serif italic"
-            />
-          </Link>
-
-          <Link
-            to="/logic"
-            onMouseEnter={() => setHover("logic")}
-            onMouseLeave={() => setHover(null)}
-            aria-label="Enter the logic side"
-            className="group absolute inset-y-0 right-0 z-10 w-1/2 cursor-pointer"
-          >
-            <Hemisphere
-              side="right"
-              words={LOGIC_WORDS}
-              hovered={hover === "logic"}
-              fontClass="font-mono"
-            />
-          </Link>
-
-          {/* Central sulcus / brain stem */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute left-1/2 top-1/2 z-[5] h-[80%] w-px -translate-x-1/2 -translate-y-1/2 bg-gradient-to-b from-transparent via-foreground/25 to-transparent"
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute left-1/2 top-1/2 z-[5] h-8 w-16 -translate-x-1/2 translate-y-[42%] rounded-b-full border border-t-0 border-foreground/20"
-          />
-
-          {/* Center label / prompt */}
-          <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center">
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-center"
-            >
-              <p className="text-[10px] uppercase tracking-[0.4em] text-muted-foreground">
-                Choose a hemisphere
-              </p>
-              <h1 className="mt-3 font-serif text-3xl italic text-foreground/90 sm:text-5xl">
-                two minds,{" "}
-                <span className="font-mono text-2xl not-italic sm:text-4xl">
-                  one_maker
-                </span>
-              </h1>
-            </motion.div>
+      {/* Hemisphere labels */}
+      <div className="relative z-20 mx-auto flex max-w-[1200px] items-center justify-between px-8 pt-2 text-[10px] uppercase tracking-[0.4em]">
+        <div className={`transition-colors ${hover === "creative" ? "text-foreground" : "text-muted-foreground"}`}>
+          <span className="font-serif italic">Left · Creative</span>
+          <div className="mt-1 font-serif text-[10px] italic text-muted-foreground/70 normal-case tracking-normal">
+            graphic · motion · music · image
           </div>
+        </div>
+        <div className={`text-right transition-colors ${hover === "logic" ? "text-foreground" : "text-muted-foreground"}`}>
+          <span className="font-mono">Right · Logic</span>
+          <div className="mt-1 font-mono text-[10px] text-muted-foreground/70 normal-case tracking-normal">
+            ai · systems · vibe coding
+          </div>
+        </div>
+      </div>
+
+      {/* Brain stage */}
+      <main className="relative mx-auto flex items-center justify-center px-4">
+        <div className="relative w-full max-w-[1200px]">
+          <svg
+            viewBox="0 0 1200 800"
+            className="w-full text-foreground"
+            role="img"
+            aria-label="Typographic brain — choose a hemisphere"
+          >
+            {/* LEFT hemisphere — clickable */}
+            <Link
+              to="/creative"
+              onMouseEnter={() => setHover("creative")}
+              onMouseLeave={() => setHover(null)}
+              aria-label="Enter the creative side"
+            >
+              <rect x="0" y="0" width="600" height="800" fill="transparent" style={{ cursor: "pointer" }} />
+              <Hemisphere
+                side="L"
+                hovered={hover === "creative"}
+                fontFamily="ui-serif, Georgia, 'Times New Roman', serif"
+                fontStyle="italic"
+                words={CREATIVE}
+              />
+            </Link>
+
+            {/* RIGHT hemisphere — clickable */}
+            <Link
+              to="/logic"
+              onMouseEnter={() => setHover("logic")}
+              onMouseLeave={() => setHover(null)}
+              aria-label="Enter the logic side"
+            >
+              <rect x="600" y="0" width="600" height="800" fill="transparent" style={{ cursor: "pointer" }} />
+              <Hemisphere
+                side="R"
+                hovered={hover === "logic"}
+                fontFamily="ui-monospace, 'JetBrains Mono', Menlo, monospace"
+                words={LOGIC}
+              />
+            </Link>
+
+            {/* central sulcus */}
+            <line
+              x1="600"
+              y1="40"
+              x2="600"
+              y2="760"
+              stroke="currentColor"
+              strokeOpacity="0.25"
+              strokeDasharray="2 6"
+            />
+            {/* brain stem */}
+            <path
+              d="M 578 760 Q 600 800 622 760"
+              fill="none"
+              stroke="currentColor"
+              strokeOpacity="0.35"
+              strokeWidth="1.2"
+            />
+
+            {/* center label */}
+            <g pointerEvents="none">
+              <text
+                x="600"
+                y="392"
+                textAnchor="middle"
+                fill="currentColor"
+                fillOpacity="0.55"
+                fontFamily="ui-monospace, monospace"
+                fontSize="10"
+                letterSpacing="6"
+              >
+                CHOOSE A HEMISPHERE
+              </text>
+            </g>
+          </svg>
+
+          {/* Center headline overlay (HTML for crisp fonts) */}
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.15 }}
+            className="pointer-events-none absolute inset-0 flex items-center justify-center"
+          >
+            <h1 className="text-center">
+              <span className="block font-serif text-4xl italic text-foreground sm:text-6xl">
+                two minds,
+              </span>
+              <span className="mt-1 block font-mono text-2xl text-foreground sm:text-4xl">
+                one_maker
+              </span>
+            </h1>
+          </motion.div>
 
           {/* Hover CTAs */}
           <div
-            className={`pointer-events-none absolute left-6 top-1/2 z-20 -translate-y-1/2 transition-all duration-500 ${
+            className={`pointer-events-none absolute left-8 bottom-10 transition-all duration-500 ${
               hover === "creative" ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"
             }`}
           >
-            <div className="font-serif text-xs uppercase tracking-[0.32em] text-foreground/60">
-              Left brain
-            </div>
-            <div className="mt-1 font-serif text-2xl italic sm:text-3xl">
-              enter the creative →
-            </div>
-            <div className="mt-1 text-xs text-muted-foreground">
-              graphic, motion, music, image
-            </div>
+            <div className="font-serif text-2xl italic sm:text-3xl">enter the creative →</div>
           </div>
-
           <div
-            className={`pointer-events-none absolute right-6 top-1/2 z-20 -translate-y-1/2 text-right transition-all duration-500 ${
+            className={`pointer-events-none absolute right-8 bottom-10 text-right transition-all duration-500 ${
               hover === "logic" ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2"
             }`}
           >
-            <div className="font-mono text-xs uppercase tracking-[0.32em] text-foreground/60">
-              Right brain
-            </div>
-            <div className="mt-1 font-mono text-2xl sm:text-3xl">
-              ← ./logic
-            </div>
-            <div className="mt-1 text-xs text-muted-foreground">
-              ai · systems · vibe coding
-            </div>
+            <div className="font-mono text-2xl sm:text-3xl">← ./logic</div>
           </div>
         </div>
       </main>
 
-      {/* Footer hint */}
+      {/* Footer */}
       <footer className="relative z-20 flex items-center justify-between px-6 py-5 text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
         <span>Hover · Click</span>
         <div className="flex gap-4">
