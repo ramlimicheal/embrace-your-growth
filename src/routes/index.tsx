@@ -205,13 +205,19 @@ function BrainLanding() {
               />
             </Link>
 
+            {/* midline fissure — the longitudinal fissure between hemispheres */}
             <line
-              x1="600" y1="40" x2="600" y2="760"
-              stroke="currentColor" strokeOpacity="0.25" strokeDasharray="2 6"
+              x1="600" y1="120" x2="600" y2="700"
+              stroke="currentColor" strokeOpacity="0.28" strokeDasharray="2 5"
+            />
+            {/* brainstem */}
+            <path
+              d="M 578 700 C 585 730 588 745 590 760 L 610 760 C 612 745 615 730 622 700"
+              fill="none" stroke="currentColor" strokeOpacity="0.4" strokeWidth="1.2"
             />
             <path
-              d="M 578 760 Q 600 800 622 760"
-              fill="none" stroke="currentColor" strokeOpacity="0.35" strokeWidth="1.2"
+              d="M 585 760 C 590 780 610 780 615 760"
+              fill="none" stroke="currentColor" strokeOpacity="0.35" strokeWidth="1.1"
             />
 
             <g pointerEvents="none">
