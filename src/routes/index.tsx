@@ -25,15 +25,30 @@ export const Route = createFileRoute("/")({
 const CREATIVE = "paint · motion · music · colour · story · image · sound · feel · brush · score · frame · grain · poem · loop · muse · sketch · shoot · cut · mix · compose · dream · verse · canvas · ink · myth · light · shadow · rhythm · echo ·  ";
 const LOGIC = "const · function · system · ship · iterate · prompt · agent · type · reason · debug · spec · graph · async · hook · state · model · logic · trace · infer · diff · commit · test · map · reduce · build · deploy · cache · route · stack · signal ·  ";
 
-type ArcConfig = { r: number; size: number; opacity: number };
-const ARCS: ArcConfig[] = [
-  { r: 60,  size: 11, opacity: 0.35 },
-  { r: 110, size: 13, opacity: 0.5  },
-  { r: 165, size: 15, opacity: 0.65 },
-  { r: 220, size: 17, opacity: 0.78 },
-  { r: 275, size: 18, opacity: 0.9  },
-  { r: 330, size: 16, opacity: 0.75 },
-  { r: 380, size: 14, opacity: 0.55 },
+// Brain hemisphere silhouettes (viewBox 1200x800, midline at x=600).
+const HEMI_OUTLINE_L =
+  "M 600 120 C 540 108 470 108 410 130 C 340 155 285 200 245 255 C 205 310 180 370 178 430 C 176 495 205 555 250 605 C 305 665 385 700 470 705 C 530 708 575 700 600 686 Z";
+const HEMI_OUTLINE_R =
+  "M 600 120 C 660 108 730 108 790 130 C 860 155 915 200 955 255 C 995 310 1020 370 1022 430 C 1024 495 995 555 950 605 C 895 665 815 700 730 705 C 670 708 625 700 600 686 Z";
+
+// Internal "gyri" — winding curves inside each hemisphere that carry text.
+const GYRI_L: { d: string; size: number; opacity: number }[] = [
+  { d: "M 585 155 C 500 150 420 165 355 205 C 300 240 260 285 240 335", size: 13, opacity: 0.55 },
+  { d: "M 590 210 C 505 215 430 240 375 285 C 320 330 285 380 275 430", size: 15, opacity: 0.72 },
+  { d: "M 592 275 C 500 285 420 320 365 375 C 315 425 290 480 300 530", size: 17, opacity: 0.9  },
+  { d: "M 594 345 C 505 360 430 400 385 450 C 345 495 335 545 360 595", size: 16, opacity: 0.85 },
+  { d: "M 596 420 C 515 445 455 490 425 535 C 400 575 405 620 445 655", size: 14, opacity: 0.7  },
+  { d: "M 598 500 C 540 530 500 570 490 610 C 485 640 505 665 545 680", size: 12, opacity: 0.5  },
+  { d: "M 260 380 C 235 430 235 490 265 545 C 295 600 355 645 425 665", size: 11, opacity: 0.4  },
+];
+const GYRI_R: { d: string; size: number; opacity: number }[] = [
+  { d: "M 615 155 C 700 150 780 165 845 205 C 900 240 940 285 960 335", size: 13, opacity: 0.55 },
+  { d: "M 610 210 C 695 215 770 240 825 285 C 880 330 915 380 925 430", size: 15, opacity: 0.72 },
+  { d: "M 608 275 C 700 285 780 320 835 375 C 885 425 910 480 900 530", size: 17, opacity: 0.9  },
+  { d: "M 606 345 C 695 360 770 400 815 450 C 855 495 865 545 840 595", size: 16, opacity: 0.85 },
+  { d: "M 604 420 C 685 445 745 490 775 535 C 800 575 795 620 755 655", size: 14, opacity: 0.7  },
+  { d: "M 602 500 C 660 530 700 570 710 610 C 715 640 695 665 655 680", size: 12, opacity: 0.5  },
+  { d: "M 940 380 C 965 430 965 490 935 545 C 905 600 845 645 775 665", size: 11, opacity: 0.4  },
 ];
 
 function Hemisphere({
@@ -49,40 +64,58 @@ function Hemisphere({
   fontStyle?: string;
   words: string;
 }) {
-  const cx = 600;
-  const cy = 400;
-  const sweep = side === "L" ? 0 : 1;
+  const outline = side === "L" ? HEMI_OUTLINE_L : HEMI_OUTLINE_R;
+  const gyri = side === "L" ? GYRI_L : GYRI_R;
+  const clipId = `clip-${side}`;
   return (
     <g
       style={{
-        transition: "opacity 500ms ease, filter 500ms ease",
-        opacity: hovered ? 1 : 0.85,
+        transition: "opacity 500ms ease",
+        opacity: hovered ? 1 : 0.82,
       }}
     >
-      {ARCS.map((a, i) => {
-        const d = `M ${cx} ${cy - a.r} A ${a.r} ${a.r} 0 0 ${sweep} ${cx} ${cy + a.r}`;
-        const id = `arc-${side}-${i}`;
-        return (
-          <g key={id}>
-            <path id={id} d={d} fill="none" stroke="none" />
-            <text
-              fill="currentColor"
-              fontFamily={fontFamily}
-              fontStyle={fontStyle}
-              fontSize={a.size}
-              letterSpacing={hovered ? "0.08em" : "0.04em"}
-              style={{
-                transition: "letter-spacing 500ms ease, opacity 500ms ease",
-                opacity: hovered ? Math.min(1, a.opacity + 0.15) : a.opacity,
-              }}
-            >
-              <textPath href={`#${id}`} startOffset="0">
-                {words.repeat(6)}
-              </textPath>
-            </text>
-          </g>
-        );
-      })}
+      <defs>
+        <clipPath id={clipId}>
+          <path d={outline} />
+        </clipPath>
+      </defs>
+
+      {/* brain silhouette stroke */}
+      <path
+        d={outline}
+        fill="none"
+        stroke="currentColor"
+        strokeOpacity={hovered ? 0.55 : 0.3}
+        strokeWidth={1.1}
+        style={{ transition: "stroke-opacity 500ms ease" }}
+      />
+
+      {/* winding text-carrying gyri, clipped to the hemisphere shape */}
+      <g clipPath={`url(#${clipId})`}>
+        {gyri.map((g, i) => {
+          const id = `gyrus-${side}-${i}`;
+          return (
+            <g key={id}>
+              <path id={id} d={g.d} fill="none" stroke="none" />
+              <text
+                fill="currentColor"
+                fontFamily={fontFamily}
+                fontStyle={fontStyle}
+                fontSize={g.size}
+                letterSpacing={hovered ? "0.08em" : "0.04em"}
+                style={{
+                  transition: "letter-spacing 500ms ease, opacity 500ms ease",
+                  opacity: hovered ? Math.min(1, g.opacity + 0.15) : g.opacity,
+                }}
+              >
+                <textPath href={`#${id}`} startOffset="0">
+                  {words.repeat(6)}
+                </textPath>
+              </text>
+            </g>
+          );
+        })}
+      </g>
     </g>
   );
 }
@@ -172,13 +205,19 @@ function BrainLanding() {
               />
             </Link>
 
+            {/* midline fissure — the longitudinal fissure between hemispheres */}
             <line
-              x1="600" y1="40" x2="600" y2="760"
-              stroke="currentColor" strokeOpacity="0.25" strokeDasharray="2 6"
+              x1="600" y1="120" x2="600" y2="700"
+              stroke="currentColor" strokeOpacity="0.28" strokeDasharray="2 5"
+            />
+            {/* brainstem */}
+            <path
+              d="M 578 700 C 585 730 588 745 590 760 L 610 760 C 612 745 615 730 622 700"
+              fill="none" stroke="currentColor" strokeOpacity="0.4" strokeWidth="1.2"
             />
             <path
-              d="M 578 760 Q 600 800 622 760"
-              fill="none" stroke="currentColor" strokeOpacity="0.35" strokeWidth="1.2"
+              d="M 585 760 C 590 780 610 780 615 760"
+              fill="none" stroke="currentColor" strokeOpacity="0.35" strokeWidth="1.1"
             />
 
             <g pointerEvents="none">
