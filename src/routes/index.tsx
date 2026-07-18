@@ -21,8 +21,6 @@ export const Route = createFileRoute("/")({
 const CREATIVE = "paint · motion · music · colour · story · image · sound · feel · brush · score · frame · grain · poem · loop · muse · sketch · shoot · cut · mix · compose · dream · verse · canvas · ink · myth · light · shadow · rhythm · echo ·  ";
 const LOGIC = "const · function · system · ship · iterate · prompt · agent · type · reason · debug · spec · graph · async · hook · state · model · logic · trace · infer · diff · commit · test · map · reduce · build · deploy · cache · route · stack · signal ·  ";
 
-// Concentric arcs forming a hemisphere. cx is the inner edge (brain stem).
-// side "L" arcs sweep the left half; "R" arcs sweep the right half.
 type ArcConfig = { r: number; size: number; opacity: number };
 const ARCS: ArcConfig[] = [
   { r: 60,  size: 11, opacity: 0.35 },
@@ -47,27 +45,18 @@ function Hemisphere({
   fontStyle?: string;
   words: string;
 }) {
-  // cx = inner edge of hemisphere (center of the brain, x=600)
   const cx = 600;
   const cy = 400;
-  // For left side, arcs go from top of stem, out and around, to bottom of stem (counterclockwise).
-  // For right side, mirrored (clockwise).
   const sweep = side === "L" ? 0 : 1;
   return (
     <g
       style={{
         transition: "opacity 500ms ease, filter 500ms ease",
         opacity: hovered ? 1 : 0.85,
-        filter: hovered ? "none" : "saturate(0.9)",
       }}
     >
       {ARCS.map((a, i) => {
-        // Arc path: from (cx, cy - r) around to (cx, cy + r) via the outer side.
-        const startX = cx;
-        const startY = cy - a.r;
-        const endX = cx;
-        const endY = cy + a.r;
-        const d = `M ${startX} ${startY} A ${a.r} ${a.r} 0 0 ${sweep} ${endX} ${endY}`;
+        const d = `M ${cx} ${cy - a.r} A ${a.r} ${a.r} 0 0 ${sweep} ${cx} ${cy + a.r}`;
         const id = `arc-${side}-${i}`;
         return (
           <g key={id}>
@@ -99,23 +88,21 @@ function BrainLanding() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-background text-foreground">
-      {/* subtle dot grid */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-[0.05]"
         style={{
-          backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
+          backgroundImage:
+            "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
           backgroundSize: "4px 4px",
         }}
       />
 
-      {/* Top bar */}
       <header className="relative z-20 flex items-center justify-between px-6 py-5 text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
         <span>Ramli T. Michael</span>
         <span className="hidden sm:inline">Portfolio · 2026</span>
       </header>
 
-      {/* Hemisphere labels */}
       <div className="relative z-20 mx-auto flex max-w-[1200px] items-center justify-between px-8 pt-2 text-[10px] uppercase tracking-[0.4em]">
         <div className={`transition-colors ${hover === "creative" ? "text-foreground" : "text-muted-foreground"}`}>
           <span className="font-serif italic">Left · Creative</span>
@@ -131,7 +118,6 @@ function BrainLanding() {
         </div>
       </div>
 
-      {/* Brain stage */}
       <main className="relative mx-auto flex items-center justify-center px-4">
         <div className="relative w-full max-w-[1200px]">
           <svg
@@ -140,7 +126,6 @@ function BrainLanding() {
             role="img"
             aria-label="Typographic brain — choose a hemisphere"
           >
-            {/* LEFT hemisphere — clickable */}
             <Link
               to="/creative"
               onMouseEnter={() => setHover("creative")}
@@ -157,7 +142,6 @@ function BrainLanding() {
               />
             </Link>
 
-            {/* RIGHT hemisphere — clickable */}
             <Link
               to="/logic"
               onMouseEnter={() => setHover("logic")}
@@ -173,43 +157,26 @@ function BrainLanding() {
               />
             </Link>
 
-            {/* central sulcus */}
             <line
-              x1="600"
-              y1="40"
-              x2="600"
-              y2="760"
-              stroke="currentColor"
-              strokeOpacity="0.25"
-              strokeDasharray="2 6"
+              x1="600" y1="40" x2="600" y2="760"
+              stroke="currentColor" strokeOpacity="0.25" strokeDasharray="2 6"
             />
-            {/* brain stem */}
             <path
               d="M 578 760 Q 600 800 622 760"
-              fill="none"
-              stroke="currentColor"
-              strokeOpacity="0.35"
-              strokeWidth="1.2"
+              fill="none" stroke="currentColor" strokeOpacity="0.35" strokeWidth="1.2"
             />
 
-            {/* center label */}
             <g pointerEvents="none">
               <text
-                x="600"
-                y="392"
-                textAnchor="middle"
-                fill="currentColor"
-                fillOpacity="0.55"
-                fontFamily="ui-monospace, monospace"
-                fontSize="10"
-                letterSpacing="6"
+                x="600" y="392" textAnchor="middle"
+                fill="currentColor" fillOpacity="0.55"
+                fontFamily="ui-monospace, monospace" fontSize="10" letterSpacing="6"
               >
                 CHOOSE A HEMISPHERE
               </text>
             </g>
           </svg>
 
-          {/* Center headline overlay (HTML for crisp fonts) */}
           <motion.div
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
@@ -226,7 +193,6 @@ function BrainLanding() {
             </h1>
           </motion.div>
 
-          {/* Hover CTAs */}
           <div
             className={`pointer-events-none absolute left-8 bottom-10 transition-all duration-500 ${
               hover === "creative" ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"
@@ -244,7 +210,6 @@ function BrainLanding() {
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="relative z-20 flex items-center justify-between px-6 py-5 text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
         <span>Hover · Click</span>
         <div className="flex gap-4">
