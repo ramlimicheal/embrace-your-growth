@@ -49,6 +49,95 @@ type HemisphereProps = {
   fontClass: string;
 };
 
+function NeuronNet({ side, hovered }: { side: "left" | "right"; hovered: boolean }) {
+  // Generate neurons deterministically, biased toward the inner edge (brain center)
+  const NODES = 34;
+  const nodes = Array.from({ length: NODES }, (_, i) => {
+    const r1 = seeded(i * 7 + (side === "left" ? 11 : 71));
+    const r2 = seeded(i * 13 + (side === "left" ? 23 : 89));
+    const r3 = seeded(i * 17 + 5);
+    // Elliptical distribution inside hemisphere (viewBox 100x100)
+    const angle =
+      side === "left"
+        ? Math.PI / 2 + r1 * Math.PI // right half of circle → left hemisphere inner edge
+        : -Math.PI / 2 + r1 * Math.PI;
+    const radius = 15 + r2 * 42;
+    const cx = 50 + Math.cos(angle) * radius * 0.95;
+    const cy = 50 + Math.sin(angle) * radius * 0.7;
+    return { cx, cy, r: 0.35 + r3 * 0.9, delay: r3 * 4 };
+  });
+
+  // Build edges: each node connects to its 2 nearest neighbors
+  const edges: Array<{ a: number; b: number; d: number }> = [];
+  for (let i = 0; i < nodes.length; i++) {
+    const dists = nodes
+      .map((n, j) => ({
+        j,
+        d: Math.hypot(n.cx - nodes[i].cx, n.cy - nodes[i].cy),
+      }))
+      .filter((x) => x.j !== i)
+      .sort((a, b) => a.d - b.d)
+      .slice(0, 2);
+    dists.forEach(({ j, d }) => {
+      if (j > i) edges.push({ a: i, b: j, d });
+    });
+  }
+
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      preserveAspectRatio="none"
+      aria-hidden
+      className="pointer-events-none absolute inset-0 h-full w-full"
+      style={{
+        opacity: hovered ? 0.9 : 0.55,
+        transition: "opacity 500ms ease",
+      }}
+    >
+      <defs>
+        <radialGradient id={`glow-${side}`} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="currentColor" stopOpacity="1" />
+          <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <g stroke="currentColor" fill="none" strokeLinecap="round">
+        {edges.map((e, i) => (
+          <line
+            key={`e-${i}`}
+            x1={nodes[e.a].cx}
+            y1={nodes[e.a].cy}
+            x2={nodes[e.b].cx}
+            y2={nodes[e.b].cy}
+            strokeWidth={0.15}
+            opacity={0.25 + (1 - Math.min(e.d, 40) / 40) * 0.4}
+          >
+            <animate
+              attributeName="opacity"
+              values="0.15;0.7;0.15"
+              dur={`${3 + (i % 5)}s`}
+              begin={`${(i % 7) * 0.3}s`}
+              repeatCount="indefinite"
+            />
+          </line>
+        ))}
+      </g>
+      <g fill="currentColor">
+        {nodes.map((n, i) => (
+          <circle key={`n-${i}`} cx={n.cx} cy={n.cy} r={n.r}>
+            <animate
+              attributeName="opacity"
+              values="0.4;1;0.4"
+              dur={`${2.5 + (i % 4)}s`}
+              begin={`${n.delay}s`}
+              repeatCount="indefinite"
+            />
+          </circle>
+        ))}
+      </g>
+    </svg>
+  );
+}
+
 function Hemisphere({ side, words, hovered, fontClass }: HemisphereProps) {
   // Hemisphere as an ellipse mask; words positioned inside via absolute coords
   return (
@@ -65,6 +154,8 @@ function Hemisphere({ side, words, hovered, fontClass }: HemisphereProps) {
             : "radial-gradient(ellipse 90% 78% at 0% 50%, black 62%, transparent 66%)",
       }}
     >
+      <NeuronNet side={side} hovered={hovered} />
+
       {words.map((w, i) => {
         const r1 = seeded(i + (side === "left" ? 0 : 500));
         const r2 = seeded(i * 3 + (side === "left" ? 7 : 91));
