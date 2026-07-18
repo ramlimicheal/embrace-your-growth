@@ -9,12 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as LogicRouteImport } from './routes/logic'
 import { Route as ProjectsSlugRouteImport } from './routes/projects.$slug'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const LogicRoute = LogicRouteImport.update({
+  id: '/logic',
+  path: '/logic',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectsSlugRoute = ProjectsSlugRouteImport.update({
@@ -24,38 +24,38 @@ const ProjectsSlugRoute = ProjectsSlugRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/logic': typeof LogicRoute
   '/projects/$slug': typeof ProjectsSlugRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/logic': typeof LogicRoute
   '/projects/$slug': typeof ProjectsSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/logic': typeof LogicRoute
   '/projects/$slug': typeof ProjectsSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/projects/$slug'
+  fullPaths: '/logic' | '/projects/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/projects/$slug'
-  id: '__root__' | '/' | '/projects/$slug'
+  to: '/logic' | '/projects/$slug'
+  id: '__root__' | '/logic' | '/projects/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  LogicRoute: typeof LogicRoute
   ProjectsSlugRoute: typeof ProjectsSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/logic': {
+      id: '/logic'
+      path: '/logic'
+      fullPath: '/logic'
+      preLoaderRoute: typeof LogicRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/projects/$slug': {
@@ -69,19 +69,9 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  LogicRoute: LogicRoute,
   ProjectsSlugRoute: ProjectsSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
